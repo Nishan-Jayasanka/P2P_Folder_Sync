@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:nearby_connections/nearby_connections.dart';
 import 'dart:io';
@@ -10,9 +9,11 @@ import 'package:path_provider/path_provider.dart';
 
 class ConnectionDiscoveringScreen extends StatefulWidget {
 
+  String directory_name;
   List<FileSystemEntity> files;
 
   ConnectionDiscoveringScreen({
+    required this.directory_name,
     required this.files,
   });
 
@@ -24,6 +25,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
   final String userName = Random().nextInt(10000).toString();
   final Strategy strategy = Strategy.P2P_STAR;
   Map<String, ConnectionInfo> endpointMap = Map();
+  Set<String> discoveredEndpoints = Set();
 
   String? tempFileUri; //reference to the file currently being transferred
   Map<int, String> map = Map(); //store filename mapped to corresponding payloadId
@@ -46,45 +48,48 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
         userName,
         strategy,
         onEndpointFound: (id, name, serviceId) {
-          // show dialog automatically to request connection
-          showDialog(
-            context: context,
-            builder: (builder) {
-              return AlertDialog(
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text("id: " + id),
-                    Text("Name: " + name),
-                    Text("ServiceId: " + serviceId),
-                    ElevatedButton(
-                      child: Text("Request Connection"),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Nearby().requestConnection(
-                          userName,
-                          id,
-                          onConnectionInitiated: (id, info) {
-                            onConnectionInit(id, info);
-                          },
-                          onConnectionResult: (id, status) {
-                            showSnackbar(status);
-                          },
-                          onDisconnected: (id) {
-                            setState(() {
-                              endpointMap.remove(id);
-                            });
-                            showSnackbar(
-                                "Disconnected from: ${endpointMap[id]!.endpointName}, id $id");
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
+          if (!discoveredEndpoints.contains(id)){
+            discoveredEndpoints.add(id);
+            // show dialog automatically to request connection
+            showDialog(
+              context: context,
+              builder: (builder) {
+                return AlertDialog(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text("id: " + id),
+                      Text("Name: " + name),
+                      Text("ServiceId: " + serviceId),
+                      ElevatedButton(
+                        child: Text("Request Connection"),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Nearby().requestConnection(
+                            userName,
+                            id,
+                            onConnectionInitiated: (id, info) {
+                              onConnectionInit(id, info);
+                            },
+                            onConnectionResult: (id, status) {
+                              showSnackbar(status);
+                            },
+                            onDisconnected: (id) {
+                              setState(() {
+                                endpointMap.remove(id);
+                              });
+                              showSnackbar(
+                                  "Disconnected from: ${endpointMap[id]!.endpointName}, id $id");
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          }
         },
         onEndpointLost: (id) {
           showSnackbar(
@@ -111,17 +116,47 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
     return b;
   }
 
-  void sendFile() async {
+  void sendAllFiles() async {
     print("------------------------------------------------------Send File");
     for (var file in widget.files) {
       print("---------------------------------Entity");
       print(file.path);
-      // Sending file using sendFilePayload
+      // Sending files using sendFilePayload
       for (MapEntry<String, ConnectionInfo> m in endpointMap.entries) {
         int payloadId = await Nearby().sendFilePayload(m.key, file.path);
-        showSnackbar("Sending file to ${m.key}");
+        showSnackbar("Sending files to ${m.key}");
         Nearby().sendBytesPayload(m.key, Uint8List.fromList("$payloadId:${file.path.split('/').last}".codeUnits));
       }
+    }
+  }
+
+  void sendFile(String fileName) async {
+    print("--- --- --- --- Send File: $fileName");
+    for (var file in widget.files) {
+      if (file.path.split('/').last == fileName){
+        print(file.path);
+        // Sending file using sendFilePayload
+        for (MapEntry<String, ConnectionInfo> m in endpointMap.entries) {
+          int payloadId = await Nearby().sendFilePayload(m.key, file.path);
+          showSnackbar("Sending file to ${m.key}");
+          Nearby().sendBytesPayload(m.key, Uint8List.fromList("$payloadId:${file.path.split('/').last}".codeUnits));
+        }
+      }
+    }
+  }
+
+  void sendPayload(String payload) async {
+    for (MapEntry<String, ConnectionInfo> m in endpointMap.entries){
+      showSnackbar("Sending $payload to ${m.value.endpointName}, id: ${m.key}");
+      Nearby().sendBytesPayload(m.key, Uint8List.fromList(payload.codeUnits));
+    }
+  }
+
+  void sync() async{
+    for (var file in widget.files){
+      print("--- --- ---" + file.path.split('/').last);
+      String payload = file.path.split('/').last;
+      sendPayload(payload);
     }
   }
 
@@ -156,6 +191,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                     onPayLoadRecieved: (endid, payload) async {
                       if (payload.type == PayloadType.BYTES) {
                         String str = String.fromCharCodes(payload.bytes!);
+                        sendFile(str);
                         showSnackbar(endid + ": " + str);
 
                         if (str.contains(':')) {
@@ -204,6 +240,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                       }
                     },
                   );
+                  sendPayload("Directory Name -${widget.directory_name}");
                 },
               ),
               ElevatedButton(
@@ -242,9 +279,19 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                 return ListTile(
                   title: Text(info.endpointName),
                   subtitle: Text("ID: $id"),
-                  trailing: ElevatedButton(
-                    onPressed: () => sendFile(),
-                    child: Text("Send File"),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => sendAllFiles(),
+                        child: Text("Start Backup"),
+                      ),
+                      SizedBox(width: 8), // Add some spacing between buttons
+                      ElevatedButton(
+                        onPressed: () => sync(),
+                        child: Text("Sync"),
+                      ),
+                    ],
                   ),
                 );
               },

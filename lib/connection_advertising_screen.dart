@@ -1,20 +1,31 @@
+import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_app/synchronization_engine.dart';
 import 'package:nearby_connections/nearby_connections.dart';
 import 'package:path_provider/path_provider.dart';
 import 'animated_connection_icon.dart';
+import 'file_list_screen.dart';
 
 class ConnectionAdvertisingScreen extends StatefulWidget {
+  final _ConnectionAdvertisingScreenState state = _ConnectionAdvertisingScreenState();
+
   @override
-  _ConnectionAdvertisingScreenState createState() => _ConnectionAdvertisingScreenState();
+  _ConnectionAdvertisingScreenState createState() => state;
+
+  void sendPayload(String fileName) {
+    state.sendPayload(fileName);
+  }
 }
 
 class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScreen> {
   final String userName = Random().nextInt(10000).toString();
   final Strategy strategy = Strategy.P2P_STAR;
-  Map<String, ConnectionInfo> endpointMap = Map();
+  static Map<String, ConnectionInfo> endpointMap = Map();
 
   String? tempFileUri; //reference to the file currently being transferred
+  String? tempDirectoryName;
   Map<int, String> map = Map(); //store filename mapped to corresponding payloadId
 
   @override
@@ -86,7 +97,25 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
                     onPayLoadRecieved: (endid, payload) async {
                       if (payload.type == PayloadType.BYTES) {
                         String str = String.fromCharCodes(payload.bytes!);
-                        showSnackbar(endid + ": " + str);
+                        if (str.contains('Directory Name -')){
+                          Directory? externalDirectory = await getExternalStorageDirectory();
+
+                          if (externalDirectory != null) {
+                            String newDirectoryName = str.split('-').last;
+                            tempDirectoryName = newDirectoryName;
+                            Directory newDirectory = Directory('${externalDirectory.absolute.path}/$newDirectoryName');
+                            if (!(await newDirectory.exists())) {
+                              newDirectory.create(recursive: true);
+                              print('New directory created: ${newDirectory.path}');
+                            } else {
+                              print('Directory already exists: ${newDirectory.path}');
+                            }
+                          } else {
+                            print('External storage directory not found');
+                          }
+                        }else{
+                          SynchronizationEngine().matchFileNames(str);
+                        }
 
                         if (str.contains(':')) {
                           // used for file payload as file payload is mapped as
@@ -105,6 +134,7 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
                             map[payloadId] = fileName;
                           }
                         }
+                        showSnackbar(endid + ": " + str);
                       } else if (payload.type == PayloadType.FILE) {
                         showSnackbar(endid + ": File transfer started");
                         tempFileUri = payload.uri;
@@ -154,10 +184,26 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
     );
   }
 
+  void navigateToFileListScreen() async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FileListScreen(),
+      ),
+    );
+  }
+
+  void sendPayload(String payload) async {
+    for (MapEntry<String, ConnectionInfo> m in endpointMap.entries){
+      Nearby().sendBytesPayload(m.key, Uint8List.fromList(payload.codeUnits));
+      print("--- --- ---Payload sent successfully. payload: $payload");
+    }
+  }
+
+
   Future<bool> moveFile(String uri, String fileName) async {
     String parentDir = (await getExternalStorageDirectory())!.absolute.path;
-    final b =
-    await Nearby().copyFileAndDeleteOriginal(uri, '$parentDir/$fileName');
+    final b = await Nearby().copyFileAndDeleteOriginal(uri, '$parentDir/$tempDirectoryName/$fileName');
 
     showSnackbar("Moved file:" + b.toString());
 
@@ -167,6 +213,7 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
         .toList()
         .join('\n');
     showSnackbar(files);
+    navigateToFileListScreen();
     return b;
   }
 

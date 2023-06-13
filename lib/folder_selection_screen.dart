@@ -1,6 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:nearby_connections/nearby_connections.dart';
+import 'package:flutter_app/selected_folders_screen.dart';
 import 'connection_discovering_screen.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -11,6 +11,7 @@ class FolderSelectionScreen extends StatefulWidget {
 }
 
 class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
+  late Folder selected_folder;
   List<FileSystemEntity> files = [];
 
   @override
@@ -29,7 +30,6 @@ class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
 
       if (folderPath != null) {
         // Retrieve the list of files inside the selected folder
-        print("------------------------------");
         print(folderPath);
         Directory folder = Directory(folderPath);
         List<FileSystemEntity> entities = await folder.list().toList();
@@ -39,6 +39,7 @@ class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
 
         setState(() {
           files = fileList;
+          selected_folder = Folder(folder.path.split('/').last, folder);
         });
       }
     } catch (e) {
@@ -52,6 +53,7 @@ class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => ConnectionDiscoveringScreen(
+          directory_name: selected_folder.folderName,
           files: files,
         ),
       ),
@@ -94,6 +96,7 @@ class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
         child: ElevatedButton(
           onPressed: () {
             navigateToConnectionDiscoveringScreen();
+            SelectedFoldersScreen.folders.add(selected_folder);
           },
           child: Text('Backup'),
         ),

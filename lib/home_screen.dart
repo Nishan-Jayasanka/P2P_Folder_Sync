@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/selected_folders_screen.dart';
 import 'folder_selection_screen.dart';
 import 'connection_advertising_screen.dart';
+// import 'selected_folders_screen.dart';
+import 'testing_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,6 +96,53 @@ class HomeScreen extends StatelessWidget {
                     Expanded(
                       child: Text(
                         'Backup Device',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: 30),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  // MaterialPageRoute(builder: (context) => SelectedFoldersScreen()),
+                  MaterialPageRoute(builder: (context) => SelectedFoldersScreen()),
+                );
+              },
+              child: Container(
+                width: 300,
+                height: 180,
+                decoration: BoxDecoration(
+                  color: Colors.orange,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.orange.withOpacity(0.5),
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: Offset(0, 3), // changes the position of the shadow
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(width: 20),
+                    Icon(
+                      Icons.folder,
+                      size: 80,
+                      color: Colors.white,
+                    ),
+                    SizedBox(width: 20),
+                    Expanded(
+                      child: Text(
+                        'Folders',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,

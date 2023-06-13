@@ -222,7 +222,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
                 SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: (locationPermissionGranted &&
-                  externalStoragePermissionGranted &&
+                  // externalStoragePermissionGranted &&
                   bluetoothPermissionGranted)
                   ? navigateToFileShareScreen : null,
                   child: Text("Continue"),
