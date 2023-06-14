@@ -1,8 +1,41 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 
-class SelectedFoldersScreen extends StatelessWidget {
+class SelectedFoldersScreen extends StatefulWidget {
+  @override
+  _SelectedFoldersScreenState createState() => _SelectedFoldersScreenState();
+}
+
+class _SelectedFoldersScreenState extends State<SelectedFoldersScreen> {
   static List<Folder> folders = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchDirectories();
+  }
+
+  Future<void> fetchDirectories() async {
+    try {
+      String parentDirectoryPath = '/storage/emulated/0/SyncBuddy';
+      Directory folder = Directory(parentDirectoryPath);
+      List<FileSystemEntity> entities = await folder.list().toList();
+
+      // Filter and store only the directories
+      List<Folder> folderList = entities
+          .whereType<Directory>()
+          .map((directory) => Folder(directory.path.split('/').last, directory))
+          .toList();
+
+      setState(() {
+        folders = folderList;
+      });
+
+    } catch (e) {
+      // Handle any error that occurs during file selection
+      print('Error: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

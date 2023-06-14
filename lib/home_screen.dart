@@ -1,11 +1,27 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_app/selected_folders_screen.dart';
 import 'folder_selection_screen.dart';
 import 'connection_advertising_screen.dart';
-// import 'selected_folders_screen.dart';
-import 'testing_screen.dart';
 
 class HomeScreen extends StatelessWidget {
+
+  void createApplicationStorageDirectory() {
+    String parentDirectoryPath = '/storage/emulated/0';
+    String newDirectoryName = 'SyncBuddy';
+
+    Directory parentDirectory = Directory(parentDirectoryPath);
+    Directory newDirectory = Directory('${parentDirectory.path}/$newDirectoryName');
+
+    if (!newDirectory.existsSync()) {
+      newDirectory.createSync();
+      print('New directory created: ${newDirectory.path}');
+    } else {
+      print('Directory already exists: ${newDirectory.path}');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,6 +34,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             GestureDetector(
               onTap: () {
+                createApplicationStorageDirectory();
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => FolderSelectionScreen()),
@@ -64,6 +81,7 @@ class HomeScreen extends StatelessWidget {
             SizedBox(height: 30),
             GestureDetector(
               onTap: () {
+                createApplicationStorageDirectory();
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => ConnectionAdvertisingScreen()),

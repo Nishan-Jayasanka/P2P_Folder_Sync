@@ -8,23 +8,32 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 class ConnectionDiscoveringScreen extends StatefulWidget {
-
+  final _ConnectionDiscoveringScreenState state = _ConnectionDiscoveringScreenState();
   String directory_name;
   List<FileSystemEntity> files;
+
+  @override
+  _ConnectionDiscoveringScreenState createState() => state;
 
   ConnectionDiscoveringScreen({
     required this.directory_name,
     required this.files,
   });
 
-  @override
-  _ConnectionDiscoveringScreenState createState() => _ConnectionDiscoveringScreenState();
+  void sendPayload(String fileName) {
+    state.sendPayload(fileName);
+  }
+
+  void sendFile(String filePath) {
+    state.sendFile(filePath);
+  }
+
 }
 
 class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScreen> {
   final String userName = Random().nextInt(10000).toString();
   final Strategy strategy = Strategy.P2P_STAR;
-  Map<String, ConnectionInfo> endpointMap = Map();
+  static Map<String, ConnectionInfo> endpointMap = Map();
   Set<String> discoveredEndpoints = Set();
 
   String? tempFileUri; //reference to the file currently being transferred
@@ -36,11 +45,11 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
     startDiscovery();
   }
 
-  @override
-  void dispose() {
-    stopDiscovery();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   stopDiscovery();
+  //   super.dispose();
+  // }
 
   Future<void> startDiscovery() async {
     try {
@@ -72,14 +81,15 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                               onConnectionInit(id, info);
                             },
                             onConnectionResult: (id, status) {
-                              showSnackbar(status);
+                              // showSnackbar(status);
                             },
                             onDisconnected: (id) {
                               setState(() {
                                 endpointMap.remove(id);
                               });
                               showSnackbar(
-                                  "Disconnected from: ${endpointMap[id]!.endpointName}, id $id");
+                              "Device Disconnected");
+                                  // "Disconnected from: ${endpointMap[id]!.endpointName}, id $id");
                             },
                           );
                         },
@@ -93,12 +103,15 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
         },
         onEndpointLost: (id) {
           showSnackbar(
-              "Lost discovered Endpoint: ${endpointMap[id]!.endpointName}, id $id");
+              "Device Disconnected");
+              // "Lost discovered Endpoint: ${endpointMap[id]!.endpointName}, id $id");
         },
       );
-      showSnackbar("DISCOVERING: " + a.toString());
+      // showSnackbar("DISCOVERING: " + a.toString());
+      showSnackbar("DISCOVERING Devices");
     } catch (e) {
-      showSnackbar(e);
+      // showSnackbar(e);
+      print(e);
     }
   }
 
@@ -108,46 +121,46 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
   }
 
   Future<bool> moveFile(String uri, String fileName) async {
-    String parentDir = (await getExternalStorageDirectory())!.absolute.path;
-    final b =
-    await Nearby().copyFileAndDeleteOriginal(uri, '$parentDir/$fileName');
+    String parentDir = '/storage/emulated/0/SyncBuddy';
+    final b = await Nearby().copyFileAndDeleteOriginal(uri, '$parentDir/${widget.directory_name}/$fileName');
 
-    showSnackbar("Moved file:" + b.toString());
+    // showSnackbar("Moved file:" + b.toString());
+
+    Directory dir = Directory('/storage/emulated/0/SyncBuddy/${widget.directory_name}');
+    final files = (await dir.list(recursive: true).toList())
+        .map((f) => f.path)
+        .toList()
+        .join('\n');
+    // showSnackbar(files);
+    // navigateToFileListScreen();
     return b;
   }
 
-  void sendAllFiles() async {
-    print("------------------------------------------------------Send File");
+  Future<void> sendAllFiles() async {
+    print("--- --- --- Start sending all files");
     for (var file in widget.files) {
-      print("---------------------------------Entity");
-      print(file.path);
+      print("--- --- --- Start sending ${file.path}");
       // Sending files using sendFilePayload
       for (MapEntry<String, ConnectionInfo> m in endpointMap.entries) {
         int payloadId = await Nearby().sendFilePayload(m.key, file.path);
-        showSnackbar("Sending files to ${m.key}");
         Nearby().sendBytesPayload(m.key, Uint8List.fromList("$payloadId:${file.path.split('/').last}".codeUnits));
       }
     }
+    showSnackbar("Backup Success.");
+    print("--- --- --- Files sending Completed");
   }
 
-  void sendFile(String fileName) async {
-    print("--- --- --- --- Send File: $fileName");
-    for (var file in widget.files) {
-      if (file.path.split('/').last == fileName){
-        print(file.path);
-        // Sending file using sendFilePayload
-        for (MapEntry<String, ConnectionInfo> m in endpointMap.entries) {
-          int payloadId = await Nearby().sendFilePayload(m.key, file.path);
-          showSnackbar("Sending file to ${m.key}");
-          Nearby().sendBytesPayload(m.key, Uint8List.fromList("$payloadId:${file.path.split('/').last}".codeUnits));
-        }
-      }
+  void sendFile(String filePath) async {
+    print("--- --- --- --- Send File: $filePath");
+    // Sending file using sendFilePayload
+    for (MapEntry<String, ConnectionInfo> m in endpointMap.entries) {
+      int payloadId = await Nearby().sendFilePayload(m.key, filePath);
+      Nearby().sendBytesPayload(m.key, Uint8List.fromList("$payloadId:${filePath.split('/').last}".codeUnits));
     }
   }
 
   void sendPayload(String payload) async {
     for (MapEntry<String, ConnectionInfo> m in endpointMap.entries){
-      showSnackbar("Sending $payload to ${m.value.endpointName}, id: ${m.key}");
       Nearby().sendBytesPayload(m.key, Uint8List.fromList(payload.codeUnits));
     }
   }
@@ -191,9 +204,13 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                     onPayLoadRecieved: (endid, payload) async {
                       if (payload.type == PayloadType.BYTES) {
                         String str = String.fromCharCodes(payload.bytes!);
-                        sendFile(str);
-                        showSnackbar(endid + ": " + str);
-
+                        // showSnackbar(endid + ": " + str);
+                        if (str.contains('Removed-')){
+                          String filePath = str.split('-').last;
+                          final file = File(filePath);
+                          await file.delete();
+                          print('--- --- File deleted successfully');
+                        }
                         if (str.contains(':')) {
                           // used for file payload as file payload is mapped as
                           // payloadId:filename
@@ -212,7 +229,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                           }
                         }
                       } else if (payload.type == PayloadType.FILE) {
-                        showSnackbar(endid + ": File transfer started");
+                        showSnackbar("File transfer started");
                         tempFileUri = payload.uri;
                       }
                     },
@@ -223,11 +240,12 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                       } else if (payloadTransferUpdate.status ==
                           PayloadStatus.FAILURE) {
                         print("failed");
-                        showSnackbar(endid + ": FAILED to transfer file");
+                        showSnackbar("FAILED to transfer file");
                       } else if (payloadTransferUpdate.status ==
                           PayloadStatus.SUCCESS) {
                         showSnackbar(
-                            "$endid success, total bytes = ${payloadTransferUpdate.totalBytes}");
+                            // "$endid success, total bytes = ${payloadTransferUpdate.totalBytes}");
+                          "File transfer success.");
 
                         if (map.containsKey(payloadTransferUpdate.id)) {
                           //rename the file now
@@ -250,7 +268,8 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                   try {
                     await Nearby().rejectConnection(id);
                   } catch (e) {
-                    showSnackbar(e);
+                    // showSnackbar(e);
+                    print(e);
                   }
                 },
               ),
@@ -283,7 +302,11 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       ElevatedButton(
-                        onPressed: () => sendAllFiles(),
+                        onPressed: () async {
+                          await sendAllFiles();
+                          print("--- --- --- Test 1");
+                          sendPayload("Start sync");
+                        } ,
                         child: Text("Start Backup"),
                       ),
                       SizedBox(width: 8), // Add some spacing between buttons

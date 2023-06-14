@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/selected_folders_screen.dart';
+import 'package:flutter_app/synchronization_engine.dart';
 import 'connection_discovering_screen.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -17,35 +18,61 @@ class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
   @override
   void initState() {
     super.initState();
-    fetchDirectories();
+    pickDirectory();
   }
 
-  void fetchDirectories() async {
+  void pickDirectory() async {
     try {
       // Open the file picker to select a folder
       String? folderPath = await FilePicker.platform.getDirectoryPath();
-
-      final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
-      print(appDocumentsDir.path);
-
-      if (folderPath != null) {
-        // Retrieve the list of files inside the selected folder
-        print(folderPath);
-        Directory folder = Directory(folderPath);
-        List<FileSystemEntity> entities = await folder.list().toList();
-
-        // Filter and store only the files
-        List<File> fileList = entities.whereType<File>().toList();
-
-        setState(() {
-          files = fileList;
-          selected_folder = Folder(folder.path.split('/').last, folder);
-        });
-      }
+      fetchFiles(folderPath!);
     } catch (e) {
       // Handle any error that occurs during file selection
       print('Error: $e');
     }
+  }
+
+  Future<void> fetchFiles(String folderPath) async {
+    if (folderPath != null) {
+      // Retrieve the list of files inside the selected folder
+      print('--- --- --- $folderPath');
+      Directory folder = Directory(folderPath);
+      List<FileSystemEntity> entities = await folder.list().toList();
+
+      // Filter and store only the files
+      List<File> fileList = entities.whereType<File>().toList();
+
+      setState(() {
+        files = fileList;
+        selected_folder = Folder(folder.path.split('/').last, folder);
+      });
+    }
+
+  }
+
+  Future<void> moveFolder(String sourcePath, String destinationPath) async {
+    final sourceDirectory = Directory(sourcePath);
+    final destinationDirectory = Directory(destinationPath);
+
+    // Create the destination directory if it doesn't exist
+    if (!destinationDirectory.existsSync()) {
+      await destinationDirectory.create(recursive: true);
+    }
+
+    // Get a list of files and directories inside the source directory
+    final filesList = sourceDirectory.listSync();
+
+    // Move each file and directory to the destination directory
+    for (var fileOrDir in filesList) {
+      final fileName = fileOrDir.path.split('/').last;
+      final newPath = '${destinationDirectory.path}/$fileName';
+      await fileOrDir.renameSync(newPath);
+    }
+
+    // Remove the empty source directory
+    await sourceDirectory.delete();
+    await fetchFiles(destinationPath);
+    SynchronizationEngine().startMonitoring(destinationDirectory.path);
   }
 
   void navigateToConnectionDiscoveringScreen() async {
@@ -94,9 +121,9 @@ class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
       bottomNavigationBar: Padding(
         padding: EdgeInsets.all(16.0),
         child: ElevatedButton(
-          onPressed: () {
+          onPressed: () async {
+            await moveFolder(selected_folder.directory.path,'/storage/emulated/0/SyncBuddy/${selected_folder.folderName}');
             navigateToConnectionDiscoveringScreen();
-            SelectedFoldersScreen.folders.add(selected_folder);
           },
           child: Text('Backup'),
         ),

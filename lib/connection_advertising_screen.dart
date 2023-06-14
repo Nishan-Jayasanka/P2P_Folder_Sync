@@ -17,6 +17,14 @@ class ConnectionAdvertisingScreen extends StatefulWidget {
   void sendPayload(String fileName) {
     state.sendPayload(fileName);
   }
+
+  void sendFile(String filePath) {
+    state.sendFile(filePath);
+  }
+
+  Map<String, ConnectionInfo> getEndPointMap(){
+    return state.getEndPointMap();
+  }
 }
 
 class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScreen> {
@@ -25,8 +33,8 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
   static Map<String, ConnectionInfo> endpointMap = Map();
 
   String? tempFileUri; //reference to the file currently being transferred
-  String? tempDirectoryName;
-  Map<int, String> map = Map(); //store filename mapped to corresponding payloadId
+  static String? tempDirectoryName;
+  static Map<int, String> map = Map(); //store filename mapped to corresponding payloadId
 
   @override
   void initState() {
@@ -34,10 +42,14 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
     startAdvertising();
   }
 
-  @override
-  void dispose() {
-    stopAdvertising();
-    super.dispose();
+  // @override
+  // void dispose() {
+  //   stopAdvertising();
+  //   super.dispose();
+  // }
+
+  Map<String, ConnectionInfo> getEndPointMap() {
+    return endpointMap;
   }
 
   Future<void> startAdvertising() async {
@@ -47,19 +59,21 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
         strategy,
         onConnectionInitiated: onConnectionInit,
         onConnectionResult: (id, status) {
-          showSnackbar(status);
+          // showSnackbar("Starting network");
         },
         onDisconnected: (id) {
           showSnackbar(
-              "Disconnected: ${endpointMap[id]!.endpointName}, id $id");
+              // "Disconnected: ${endpointMap[id]!.endpointName}, id $id");
+              "Device Disconnected");
           setState(() {
             endpointMap.remove(id);
           });
         },
       );
-      showSnackbar("ADVERTISING: " + a.toString());
+      // showSnackbar("ADVERTISING: " + a.toString());
     } catch (exception) {
-      showSnackbar(exception);
+      // showSnackbar(exception);
+      print(exception);
     }
   }
 
@@ -97,24 +111,30 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
                     onPayLoadRecieved: (endid, payload) async {
                       if (payload.type == PayloadType.BYTES) {
                         String str = String.fromCharCodes(payload.bytes!);
-                        if (str.contains('Directory Name -')){
-                          Directory? externalDirectory = await getExternalStorageDirectory();
 
-                          if (externalDirectory != null) {
-                            String newDirectoryName = str.split('-').last;
-                            tempDirectoryName = newDirectoryName;
-                            Directory newDirectory = Directory('${externalDirectory.absolute.path}/$newDirectoryName');
-                            if (!(await newDirectory.exists())) {
-                              newDirectory.create(recursive: true);
-                              print('New directory created: ${newDirectory.path}');
-                            } else {
-                              print('Directory already exists: ${newDirectory.path}');
-                            }
+                        if (str.contains('Directory Name -')){
+                          String parentDirectoryPath = '/storage/emulated/0/SyncBuddy';
+                          String newDirectoryName = str.split('-').last;
+                          tempDirectoryName = newDirectoryName;
+                          Directory newDirectory = Directory('$parentDirectoryPath/$newDirectoryName');
+                          if (!(await newDirectory.exists())) {
+                            newDirectory.create(recursive: true);
+                            print('--- --- New directory created: ${newDirectory.path}');
                           } else {
-                            print('External storage directory not found');
+                            print('--- --- Directory already exists: ${newDirectory.path}');
                           }
-                        }else{
-                          SynchronizationEngine().matchFileNames(str);
+
+                        }
+
+                        if (str.contains("Start sync")){
+                          SynchronizationEngine().startMonitoring('/storage/emulated/0/SyncBuddy/$tempDirectoryName');
+                        }
+
+                        if (str.contains('Removed-')){
+                          String filePath = str.split('-').last;
+                          final file = File(filePath);
+                          await file.delete();
+                          print('--- --- File deleted successfully');
                         }
 
                         if (str.contains(':')) {
@@ -127,31 +147,29 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
                             if (tempFileUri != null) {
                               moveFile(tempFileUri!, fileName);
                             } else {
-                              showSnackbar("File doesn't exist");
+                              showSnackbar("--- --- --- File doesn't exist");
                             }
                           } else {
                             //add to map if not already
                             map[payloadId] = fileName;
                           }
                         }
-                        showSnackbar(endid + ": " + str);
+                        // showSnackbar(endid + ": " + str);
                       } else if (payload.type == PayloadType.FILE) {
-                        showSnackbar(endid + ": File transfer started");
+                        showSnackbar("File transfer started");
                         tempFileUri = payload.uri;
                       }
                     },
                     onPayloadTransferUpdate: (endid, payloadTransferUpdate) {
-                      if (payloadTransferUpdate.status ==
-                          PayloadStatus.IN_PROGRESS) {
+                      if (payloadTransferUpdate.status == PayloadStatus.IN_PROGRESS) {
+                        print("--- --- --- Payload transfer in progress.");
                         print(payloadTransferUpdate.bytesTransferred);
-                      } else if (payloadTransferUpdate.status ==
-                          PayloadStatus.FAILURE) {
-                        print("failed");
-                        showSnackbar(endid + ": FAILED to transfer file");
-                      } else if (payloadTransferUpdate.status ==
-                          PayloadStatus.SUCCESS) {
-                        showSnackbar(
-                            "$endid success, total bytes = ${payloadTransferUpdate.totalBytes}");
+                      } else if (payloadTransferUpdate.status == PayloadStatus.FAILURE) {
+                        print("--- --- --- Payload transfer failed.");
+                        showSnackbar("FAILED to transfer file");
+                      } else if (payloadTransferUpdate.status == PayloadStatus.SUCCESS) {
+                        print("--- --- --- Payload transfer successful.");
+                        showSnackbar("File transfer successful");
 
                         if (map.containsKey(payloadTransferUpdate.id)) {
                           //rename the file now
@@ -159,6 +177,7 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
                           moveFile(tempFileUri!, name);
                         } else {
                           //bytes not received till yet
+                          print("--- --- --- Bytes not received till yet");
                           map[payloadTransferUpdate.id] = "";
                         }
                       }
@@ -173,7 +192,8 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
                   try {
                     await Nearby().rejectConnection(id);
                   } catch (e) {
-                    showSnackbar(e);
+                    // showSnackbar(e);
+                    print(e);
                   }
                 },
               ),
@@ -184,14 +204,14 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
     );
   }
 
-  void navigateToFileListScreen() async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => FileListScreen(),
-      ),
-    );
-  }
+  // void navigateToFileListScreen() async {
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (context) => FileListScreen(),
+  //     ),
+  //   );
+  // }
 
   void sendPayload(String payload) async {
     for (MapEntry<String, ConnectionInfo> m in endpointMap.entries){
@@ -200,20 +220,28 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
     }
   }
 
+  void sendFile(String filePath) async {
+    print("--- --- --- --- Send File: $filePath");
+    for (MapEntry<String, ConnectionInfo> m in endpointMap.entries) {
+      int payloadId = await Nearby().sendFilePayload(m.key, filePath);
+      Nearby().sendBytesPayload(m.key, Uint8List.fromList("$payloadId:${filePath.split('/').last}".codeUnits));
+    }
+  }
+
 
   Future<bool> moveFile(String uri, String fileName) async {
-    String parentDir = (await getExternalStorageDirectory())!.absolute.path;
+    String parentDir = '/storage/emulated/0/SyncBuddy';
     final b = await Nearby().copyFileAndDeleteOriginal(uri, '$parentDir/$tempDirectoryName/$fileName');
 
-    showSnackbar("Moved file:" + b.toString());
+    // showSnackbar("Moved file:" + b.toString());
 
-    final dir = (await getExternalStorageDirectory())!;
+    Directory dir = Directory('/storage/emulated/0/SyncBuddy/$tempDirectoryName');
     final files = (await dir.list(recursive: true).toList())
         .map((f) => f.path)
         .toList()
         .join('\n');
-    showSnackbar(files);
-    navigateToFileListScreen();
+    // showSnackbar(files);
+    // navigateToFileListScreen();
     return b;
   }
 
