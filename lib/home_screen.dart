@@ -3,14 +3,16 @@ import 'package:flutter_app/selected_folders_screen.dart';
 import 'folder_selection_screen.dart';
 import 'connection_advertising_screen.dart';
 // import 'selected_folders_screen.dart';
-import 'testing_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('SyncBuddy'),
+        title: Text(
+          'SyncBuddy',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: Center(
         child: Column(
@@ -20,7 +22,8 @@ class HomeScreen extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => FolderSelectionScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => FolderSelectionScreen()),
                 );
               },
               child: Container(
@@ -34,7 +37,8 @@ class HomeScreen extends StatelessWidget {
                       color: Colors.blue.withOpacity(0.5),
                       spreadRadius: 2,
                       blurRadius: 5,
-                      offset: Offset(0, 3), // changes the position of the shadow
+                      offset:
+                          Offset(0, 3), // changes the position of the shadow
                     ),
                   ],
                 ),
@@ -42,7 +46,7 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     SizedBox(width: 20),
                     Icon(
-                      Icons.devices,
+                      Icons.phone_android_outlined,
                       size: 80,
                       color: Colors.white,
                     ),
@@ -66,7 +70,8 @@ class HomeScreen extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ConnectionAdvertisingScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => ConnectionAdvertisingScreen()),
                 );
               },
               child: Container(
@@ -80,7 +85,8 @@ class HomeScreen extends StatelessWidget {
                       color: Colors.green.withOpacity(0.5),
                       spreadRadius: 2,
                       blurRadius: 5,
-                      offset: Offset(0, 3), // changes the position of the shadow
+                      offset:
+                          Offset(0, 3), // changes the position of the shadow
                     ),
                   ],
                 ),
@@ -113,7 +119,8 @@ class HomeScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   // MaterialPageRoute(builder: (context) => SelectedFoldersScreen()),
-                  MaterialPageRoute(builder: (context) => SelectedFoldersScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => SelectedFoldersScreen()),
                 );
               },
               child: Container(
@@ -127,7 +134,8 @@ class HomeScreen extends StatelessWidget {
                       color: Colors.orange.withOpacity(0.5),
                       spreadRadius: 2,
                       blurRadius: 5,
-                      offset: Offset(0, 3), // changes the position of the shadow
+                      offset:
+                          Offset(0, 3), // changes the position of the shadow
                     ),
                   ],
                 ),

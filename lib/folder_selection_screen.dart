@@ -25,7 +25,8 @@ class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
       // Open the file picker to select a folder
       String? folderPath = await FilePicker.platform.getDirectoryPath();
 
-      final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
+      final Directory appDocumentsDir =
+          await getApplicationDocumentsDirectory();
       print(appDocumentsDir.path);
 
       if (folderPath != null) {
@@ -64,7 +65,10 @@ class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Selected Files'),
+        title: Text(
+          'Selected Files',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: ListView.builder(
         itemCount: files.length,
@@ -94,6 +98,9 @@ class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
       bottomNavigationBar: Padding(
         padding: EdgeInsets.all(16.0),
         child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+              backgroundColor: Color.fromARGB(255, 168, 5, 35),
+              foregroundColor: Colors.white),
           onPressed: () {
             navigateToConnectionDiscoveringScreen();
             SelectedFoldersScreen.folders.add(selected_folder);
@@ -104,4 +111,3 @@ class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
     );
   }
 }
-

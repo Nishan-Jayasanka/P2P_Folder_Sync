@@ -16,7 +16,9 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Sync Buddy',
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          colorScheme: ColorScheme.fromSwatch()
+              .copyWith(primary: const Color.fromARGB(255, 15, 70, 116)),
+          // textTheme: GoogleFonts.emilysCandyTextTheme(),
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
         home: SplashScreen(),
@@ -25,12 +27,4 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyAppState extends ChangeNotifier {
-}
-
-
-
-
-
-
-
+class MyAppState extends ChangeNotifier {}

@@ -8,7 +8,6 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 class ConnectionDiscoveringScreen extends StatefulWidget {
-
   String directory_name;
   List<FileSystemEntity> files;
 
@@ -18,17 +17,19 @@ class ConnectionDiscoveringScreen extends StatefulWidget {
   });
 
   @override
-  _ConnectionDiscoveringScreenState createState() => _ConnectionDiscoveringScreenState();
+  _ConnectionDiscoveringScreenState createState() =>
+      _ConnectionDiscoveringScreenState();
 }
 
-class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScreen> {
+class _ConnectionDiscoveringScreenState
+    extends State<ConnectionDiscoveringScreen> {
   final String userName = Random().nextInt(10000).toString();
   final Strategy strategy = Strategy.P2P_STAR;
-  Map<String, ConnectionInfo> endpointMap = Map();
-  Set<String> discoveredEndpoints = Set();
+  Map<String, ConnectionInfo> endpointMap = {};
+  Set<String> discoveredEndpoints = {};
 
   String? tempFileUri; //reference to the file currently being transferred
-  Map<int, String> map = Map(); //store filename mapped to corresponding payloadId
+  Map<int, String> map = {}; //store filename mapped to corresponding payloadId
 
   @override
   void initState() {
@@ -48,7 +49,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
         userName,
         strategy,
         onEndpointFound: (id, name, serviceId) {
-          if (!discoveredEndpoints.contains(id)){
+          if (!discoveredEndpoints.contains(id)) {
             discoveredEndpoints.add(id);
             // show dialog automatically to request connection
             showDialog(
@@ -58,11 +59,22 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      Text("id: " + id),
-                      Text("Name: " + name),
-                      Text("ServiceId: " + serviceId),
+                      Text("Id: $id"),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Text("Name: $name"),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      // Text("ServiceId: $serviceId"),
+                      SizedBox(
+                        height: 10,
+                      ),
                       ElevatedButton(
-                        child: Text("Request Connection"),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Color.fromARGB(255, 154, 3, 31),
+                            foregroundColor: Colors.white),
                         onPressed: () {
                           Navigator.pop(context);
                           Nearby().requestConnection(
@@ -83,6 +95,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                             },
                           );
                         },
+                        child: Text("Request Connection"),
                       ),
                     ],
                   ),
@@ -96,12 +109,11 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
               "Lost discovered Endpoint: ${endpointMap[id]!.endpointName}, id $id");
         },
       );
-      showSnackbar("DISCOVERING: " + a.toString());
+      showSnackbar("DISCOVERING: $a");
     } catch (e) {
       showSnackbar(e);
     }
   }
-
 
   Future<void> stopDiscovery() async {
     await Nearby().stopDiscovery();
@@ -110,9 +122,9 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
   Future<bool> moveFile(String uri, String fileName) async {
     String parentDir = (await getExternalStorageDirectory())!.absolute.path;
     final b =
-    await Nearby().copyFileAndDeleteOriginal(uri, '$parentDir/$fileName');
+        await Nearby().copyFileAndDeleteOriginal(uri, '$parentDir/$fileName');
 
-    showSnackbar("Moved file:" + b.toString());
+    showSnackbar("Moved file:$b");
     return b;
   }
 
@@ -125,7 +137,10 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
       for (MapEntry<String, ConnectionInfo> m in endpointMap.entries) {
         int payloadId = await Nearby().sendFilePayload(m.key, file.path);
         showSnackbar("Sending files to ${m.key}");
-        Nearby().sendBytesPayload(m.key, Uint8List.fromList("$payloadId:${file.path.split('/').last}".codeUnits));
+        Nearby().sendBytesPayload(
+            m.key,
+            Uint8List.fromList(
+                "$payloadId:${file.path.split('/').last}".codeUnits));
       }
     }
   }
@@ -133,37 +148,41 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
   void sendFile(String fileName) async {
     print("--- --- --- --- Send File: $fileName");
     for (var file in widget.files) {
-      if (file.path.split('/').last == fileName){
+      if (file.path.split('/').last == fileName) {
         print(file.path);
         // Sending file using sendFilePayload
         for (MapEntry<String, ConnectionInfo> m in endpointMap.entries) {
           int payloadId = await Nearby().sendFilePayload(m.key, file.path);
           showSnackbar("Sending file to ${m.key}");
-          Nearby().sendBytesPayload(m.key, Uint8List.fromList("$payloadId:${file.path.split('/').last}".codeUnits));
+          Nearby().sendBytesPayload(
+              m.key,
+              Uint8List.fromList(
+                  "$payloadId:${file.path.split('/').last}".codeUnits));
         }
       }
     }
   }
 
   void sendPayload(String payload) async {
-    for (MapEntry<String, ConnectionInfo> m in endpointMap.entries){
+    for (MapEntry<String, ConnectionInfo> m in endpointMap.entries) {
       showSnackbar("Sending $payload to ${m.value.endpointName}, id: ${m.key}");
       Nearby().sendBytesPayload(m.key, Uint8List.fromList(payload.codeUnits));
     }
   }
 
-  void sync() async{
-    for (var file in widget.files){
-      print("--- --- ---" + file.path.split('/').last);
+  void sync() async {
+    for (var file in widget.files) {
+      print("--- --- ---${file.path.split('/').last}");
       String payload = file.path.split('/').last;
       sendPayload(payload);
     }
   }
 
-
   void showSnackbar(dynamic a) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(a.toString()),
+      backgroundColor: Colors.orange[700],
+      dismissDirection: DismissDirection.horizontal,
     ));
   }
 
@@ -175,12 +194,21 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text("id: " + id),
-              Text("Token: " + info.authenticationToken),
-              Text("Name" + info.endpointName),
-              Text("Incoming: " + info.isIncomingConnection.toString()),
+              Text("Id: $id"),
+              SizedBox(
+                height: 10,
+              ),
+              // Text("Token: ${info.authenticationToken}"),
+              Text("Name: ${info.endpointName}"),
+              SizedBox(
+                height: 10,
+              ),
+              // Text("Incoming: ${info.isIncomingConnection}"),
               ElevatedButton(
-                child: Text("Accept Connection"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 168, 5, 35),
+                  foregroundColor: Colors.white,
+                ),
                 onPressed: () {
                   Navigator.pop(context);
                   setState(() {
@@ -192,7 +220,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                       if (payload.type == PayloadType.BYTES) {
                         String str = String.fromCharCodes(payload.bytes!);
                         sendFile(str);
-                        showSnackbar(endid + ": " + str);
+                        showSnackbar("$endid: $str");
 
                         if (str.contains(':')) {
                           // used for file payload as file payload is mapped as
@@ -212,7 +240,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                           }
                         }
                       } else if (payload.type == PayloadType.FILE) {
-                        showSnackbar(endid + ": File transfer started");
+                        showSnackbar("$endid: File transfer started");
                         tempFileUri = payload.uri;
                       }
                     },
@@ -223,7 +251,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                       } else if (payloadTransferUpdate.status ==
                           PayloadStatus.FAILURE) {
                         print("failed");
-                        showSnackbar(endid + ": FAILED to transfer file");
+                        showSnackbar("$endid: FAILED to transfer file");
                       } else if (payloadTransferUpdate.status ==
                           PayloadStatus.SUCCESS) {
                         showSnackbar(
@@ -242,6 +270,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                   );
                   sendPayload("Directory Name -${widget.directory_name}");
                 },
+                child: Text("Accept Connection"),
               ),
               ElevatedButton(
                 child: Text("Reject Connection"),
@@ -265,7 +294,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Connection Discover"),
+        title: Text("Connection Discovery"),
       ),
       body: Column(
         children: [
@@ -277,30 +306,53 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                 final ConnectionInfo info = endpointMap[id]!;
 
                 return ListTile(
-                  title: Text(info.endpointName),
-                  subtitle: Text("ID: $id"),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => sendAllFiles(),
-                        child: Text("Start Backup"),
-                      ),
-                      SizedBox(width: 8), // Add some spacing between buttons
-                      ElevatedButton(
-                        onPressed: () => sync(),
-                        child: Text("Sync"),
-                      ),
-                    ],
+                  // title: Text(info.endpointName),
+                  // subtitle: Text("ID: $id"),
+                  leading: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(height: 15),
+                        ElevatedButton(
+                          onPressed: () => sendAllFiles(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color.fromARGB(255, 154, 3, 31),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: Text("Start Backup"),
+                        ),
+                        SizedBox(
+                            height: 15), // Add some spacing between buttons
+                        ElevatedButton(
+                          onPressed: () => sync(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color.fromARGB(255, 154, 3, 31),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: Text("Sync"),
+                        ),
+                        SizedBox(
+                          height: 15,
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
             ),
           ),
-          Text("Number of connected devices: ${endpointMap.length}"),
+          Padding(
+            padding: const EdgeInsets.all(25),
+            child: Text(
+              "Number of connected devices: ${endpointMap.length}",
+              style: TextStyle(
+                fontSize: 18,
+                color: const Color.fromARGB(255, 14, 53, 85),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
-
 }

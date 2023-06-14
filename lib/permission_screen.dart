@@ -16,7 +16,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
   bool locationEnabled = false;
   final String userName = Random().nextInt(10000).toString();
   final Strategy strategy = Strategy.P2P_STAR;
-  Map<String, ConnectionInfo> endpointMap = Map();
+  Map<String, ConnectionInfo> endpointMap = {};
 
   @override
   void initState() {
@@ -53,7 +53,6 @@ class _PermissionScreenState extends State<PermissionScreen> {
     );
   }
 
-
   void openSettings() async {
     await openAppSettings();
   }
@@ -72,7 +71,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
     setState(() {
       externalStoragePermissionGranted = true;
     });
-    bool c = await  Nearby().checkExternalStoragePermission();
+    bool c = await Nearby().checkExternalStoragePermission();
     print(c);
   }
 
@@ -81,7 +80,8 @@ class _PermissionScreenState extends State<PermissionScreen> {
     setState(() {
       bluetoothPermissionGranted = true;
     });
-    bool isBluetoothPermissionGranted = await Nearby().checkBluetoothPermission();
+    bool isBluetoothPermissionGranted =
+        await Nearby().checkBluetoothPermission();
     print(isBluetoothPermissionGranted);
   }
 
@@ -95,7 +95,8 @@ class _PermissionScreenState extends State<PermissionScreen> {
           showSnackbar(status);
         },
         onDisconnected: (id) {
-          showSnackbar("Disconnected: ${endpointMap[id]!.endpointName}, id $id");
+          showSnackbar(
+              "Disconnected: ${endpointMap[id]!.endpointName}, id $id");
           setState(() {
             endpointMap.remove(id);
           });
@@ -111,6 +112,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
   void showSnackbar(dynamic a) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(a.toString()),
+      backgroundColor: Colors.orange[700],
     ));
   }
 
@@ -121,10 +123,10 @@ class _PermissionScreenState extends State<PermissionScreen> {
         return Center(
           child: Column(
             children: <Widget>[
-              Text("id: " + id),
-              Text("Token: " + info.authenticationToken),
-              Text("Name" + info.endpointName),
-              Text("Incoming: " + info.isIncomingConnection.toString()),
+              Text("id: $id"),
+              Text("Token: ${info.authenticationToken}"),
+              Text("Name${info.endpointName}"),
+              Text("Incoming: ${info.isIncomingConnection}"),
               ElevatedButton(
                 child: Text("Accept Connection"),
                 onPressed: () {
@@ -164,109 +166,117 @@ class _PermissionScreenState extends State<PermissionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color.fromARGB(255, 237, 240, 248),
       appBar: AppBar(
-        title: Text("Permission Screen"),
+        title: Text(
+          "Permission",
+          style: TextStyle(color: Colors.white),
+        ),
+        // titleTextStyle: Text,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            SizedBox(
+              height: 15, // <-- SEE HERE
+            ),
             Text(
-              "Location Permission",
+              "Permission Needed",
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            ListTile(
-              title: Text("Granted"),
-              leading: Checkbox(
-                value: locationPermissionGranted,
-                onChanged: null,
-              ),
-            ),
-            ListTile(
-              title: Text("External Storage Permission"),
-              leading: Checkbox(
-                value: externalStoragePermissionGranted,
-                onChanged: null,
-              ),
-            ),
-            ListTile(
-              title: Text("Bluetooth Permission (Android 12+)"),
-              leading: Checkbox(
-                value: bluetoothPermissionGranted,
-                onChanged: null,
-              ),
-            ),
-            Divider(),
-            Text(
-              "Location Enabled",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            ListTile(
-              title: Text(locationEnabled ? "Enabled" : "Disabled"),
-              leading: Checkbox(
-                value: locationEnabled,
-                onChanged: null,
-              ),
-            ),
-            SizedBox(height: 16),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: (locationPermissionGranted &&
-                  // externalStoragePermissionGranted &&
-                  bluetoothPermissionGranted)
-                  ? navigateToFileShareScreen : null,
-                  child: Text("Continue"),
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-            Text(
-              "Permission Issues",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+            SizedBox(
+              height: 50, // <-- SEE HERE
             ),
             ListTile(
               title: Text("Location Permission"),
+              leading: Icon(Icons.location_pin),
               trailing: ElevatedButton(
-                child: Text("Grant Permission"),
                 onPressed: locationPermissionGranted
                     ? null
                     : requestLocationPermission,
+                style: ElevatedButton.styleFrom(
+                    // backgroundColor: Color.fromARGB(1, 154, 3, 30),
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white),
+                child: Text("Grant Permission"),
               ),
-              onTap: locationPermissionGranted ? null : requestLocationPermission,
+              onTap:
+                  locationPermissionGranted ? null : requestLocationPermission,
+            ),
+            SizedBox(
+              height: 30, // <-- SEE HERE
             ),
             ListTile(
               title: Text("External Storage Permission"),
+              leading: Icon(Icons.storage_rounded),
               trailing: ElevatedButton(
-                child: Text("Grant Permission"),
+                style: ElevatedButton.styleFrom(
+                    // backgroundColor: Color.fromARGB(1, 154, 3, 30),
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white),
                 onPressed: externalStoragePermissionGranted
                     ? null
                     : requestStoragePermission,
+                child: Text("Grant Permission"),
               ),
-              onTap:
-              externalStoragePermissionGranted ? null : requestStoragePermission,
+              onTap: externalStoragePermissionGranted
+                  ? null
+                  : requestStoragePermission,
+            ),
+            SizedBox(
+              height: 30, // <-- SEE HERE
             ),
             ListTile(
               title: Text("Bluetooth Permission (Android 12+)"),
+              leading: Icon(Icons.bluetooth),
               trailing: ElevatedButton(
-                child: Text("Grant Permission"),
+                style: ElevatedButton.styleFrom(
+                    // backgroundColor: Color.fromARGB(1, 154, 3, 30),
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white),
                 onPressed: bluetoothPermissionGranted
                     ? null
                     : requestBluetoothPermission,
+                child: Text("Grant Permission"),
               ),
-              onTap: bluetoothPermissionGranted ? null : requestBluetoothPermission,
+              onTap: bluetoothPermissionGranted
+                  ? null
+                  : requestBluetoothPermission,
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: Container(
+                    margin: EdgeInsets.only(top: 50),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        // backgroundColor: Color.fromARGB(1, 154, 3, 30),
+                        backgroundColor: Color.fromARGB(255, 168, 5, 35),
+                        foregroundColor: Colors.white,
+                        minimumSize: Size.fromHeight(50),
+                      ),
+                      onPressed: (locationPermissionGranted &&
+                              externalStoragePermissionGranted &&
+                              bluetoothPermissionGranted)
+                          ? navigateToFileShareScreen
+                          : null,
+                      child: Text(
+                        "Continue",
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -274,4 +284,3 @@ class _PermissionScreenState extends State<PermissionScreen> {
     );
   }
 }
-

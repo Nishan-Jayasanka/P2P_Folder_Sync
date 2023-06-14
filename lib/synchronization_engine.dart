@@ -6,7 +6,7 @@ class SynchronizationEngine {
 
   Future<void> matchFileNames(String fileName) async {
     String appDir = (await getExternalStorageDirectory())!.absolute.path;
-    final filesDir = Directory('$appDir');
+    final filesDir = Directory(appDir);
     List<FileSystemEntity> files = await filesDir.list().toList();
     for (var file in files) {
       if (file is File && file.path.split('/').last == fileName) {

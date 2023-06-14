@@ -35,7 +35,7 @@ class _FileListScreenState extends State<FileListScreen> {
     try {
       // final appDir = await getApplicationDocumentsDirectory();
       String appDir = (await getExternalStorageDirectory())!.absolute.path;
-      final filesDir = Directory('$appDir');
+      final filesDir = Directory(appDir);
       List<FileSystemEntity> entities = await filesDir.list().toList();
 
       List<File> updatedFiles = entities.whereType<File>().toList();
