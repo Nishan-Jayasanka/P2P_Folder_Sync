@@ -123,6 +123,10 @@ class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
       bottomNavigationBar: Padding(
         padding: EdgeInsets.all(16.0),
         child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color.fromARGB(255, 168, 5, 35),
+            foregroundColor: Colors.white,
+          ),
           onPressed: () async {
             await moveFolder(selected_folder.directory.path,
                 '/storage/emulated/0/SyncBuddy/${selected_folder.folderName}');
