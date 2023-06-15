@@ -55,7 +55,7 @@ class _ConnectionDiscoveringScreenState
 
   Future<void> startDiscovery() async {
     try {
-      bool a = await Nearby().startDiscovery(
+      bool startDiscovery = await Nearby().startDiscovery(
         userName,
         strategy,
         onEndpointFound: (id, name, serviceId) {
@@ -119,7 +119,7 @@ class _ConnectionDiscoveringScreenState
           // "Lost discovered Endpoint: ${endpointMap[id]!.endpointName}, id $id");
         },
       );
-      // showSnackbar("DISCOVERING: " + a.toString());
+      // showSnackbar("DISCOVERING: " + startDiscovery.toString());
       showSnackbar("DISCOVERING Devices");
     } catch (e) {
       // showSnackbar(e);
@@ -192,9 +192,9 @@ class _ConnectionDiscoveringScreenState
     }
   }
 
-  void showSnackbar(dynamic a) {
+  void showSnackbar(dynamic startDiscovery) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(a.toString()),
+      content: Text(startDiscovery.toString()),
       backgroundColor: Colors.orange[700],
       dismissDirection: DismissDirection.horizontal,
     ));

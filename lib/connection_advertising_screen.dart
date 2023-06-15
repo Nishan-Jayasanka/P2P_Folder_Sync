@@ -269,10 +269,10 @@ class _ConnectionAdvertisingScreenState
 
   Future<bool> moveFile(String uri, String fileName) async {
     String parentDir = '/storage/emulated/0/SyncBuddy';
-    final b = await Nearby().copyFileAndDeleteOriginal(
+    final moveFile = await Nearby().copyFileAndDeleteOriginal(
         uri, '$parentDir/$tempDirectoryName/$fileName');
 
-    // showSnackbar("Moved file:" + b.toString());
+    // showSnackbar("Moved file:" + moveFile.toString());
 
     Directory dir =
         Directory('/storage/emulated/0/SyncBuddy/$tempDirectoryName');
@@ -282,7 +282,7 @@ class _ConnectionAdvertisingScreenState
         .join('\n');
     // showSnackbar(files);
     // navigateToFileListScreen();
-    return b;
+    return moveFile;
   }
 
   @override
