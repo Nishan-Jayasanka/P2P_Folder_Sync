@@ -83,7 +83,7 @@ class _ConnectionDiscoveringScreenState
                       ),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                            backgroundColor: Color.fromARGB(255, 154, 3, 31),
+                            backgroundColor: Color.fromARGB(255, 15, 70, 116),
                             foregroundColor: Colors.white),
                         onPressed: () {
                           Navigator.pop(context);
@@ -218,9 +218,10 @@ class _ConnectionDiscoveringScreenState
                 height: 10,
               ),
               // Text("Incoming: ${info.isIncomingConnection}"),
+              //Color.fromARGB(255, 168, 5, 35),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color.fromARGB(255, 168, 5, 35),
+                  backgroundColor: Color.fromARGB(255, 15, 70, 116),
                   foregroundColor: Colors.white,
                 ),
                 onPressed: () {
@@ -292,6 +293,10 @@ class _ConnectionDiscoveringScreenState
                 child: Text("Accept Connection"),
               ),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 168, 5, 35),
+                  foregroundColor: Colors.white,
+                ),
                 child: Text("Reject Connection"),
                 onPressed: () async {
                   Navigator.pop(context);

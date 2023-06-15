@@ -113,7 +113,7 @@ class _ConnectionAdvertisingScreenState
               // Text("Incoming: ${info.isIncomingConnection}"),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color.fromARGB(255, 168, 5, 35),
+                  backgroundColor: Color.fromARGB(255, 15, 70, 116),
                   foregroundColor: Colors.white,
                 ),
                 child: Text("Accept Connection"),
@@ -218,6 +218,10 @@ class _ConnectionAdvertisingScreenState
                 },
               ),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 168, 5, 35),
+                  foregroundColor: Colors.white,
+                ),
                 child: Text("Reject Connection"),
                 onPressed: () async {
                   Navigator.pop(context);

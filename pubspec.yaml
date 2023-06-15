@@ -11,7 +11,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_svg: ^2.0.7
+  # flutter_svg: ^2.0.7
   flutter_animation_progress_bar: ^2.0.0
   nearby_connections: ^3.3.0
   image_picker: ^0.8.7+5
