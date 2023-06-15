@@ -31,6 +31,7 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
   final String userName = Random().nextInt(10000).toString();
   final Strategy strategy = Strategy.P2P_STAR;
   static Map<String, ConnectionInfo> endpointMap = Map();
+  bool isBackup = true;
 
   String? tempFileUri; //reference to the file currently being transferred
   static String? tempDirectoryName;
@@ -127,10 +128,18 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
                         }
 
                         if (str.contains("Start sync")){
+                          setState(() {
+                            isBackup = false;
+                          });
+                          SynchronizationEngine().startMonitoring('/storage/emulated/0/SyncBuddy/$tempDirectoryName');
+                        }else{
+                          setState(() {
+                            isBackup = true;
+                          });
                           SynchronizationEngine().startMonitoring('/storage/emulated/0/SyncBuddy/$tempDirectoryName');
                         }
 
-                        if (str.contains('Removed-')){
+                        if (str.contains('Removed-') && !isBackup){
                           String filePath = str.split('-').last;
                           final file = File(filePath);
                           await file.delete();
@@ -169,7 +178,7 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
                         showSnackbar("FAILED to transfer file");
                       } else if (payloadTransferUpdate.status == PayloadStatus.SUCCESS) {
                         print("--- --- --- Payload transfer successful.");
-                        showSnackbar("File transfer successful");
+                        // showSnackbar("File transfer successful");
 
                         if (map.containsKey(payloadTransferUpdate.id)) {
                           //rename the file now

@@ -35,6 +35,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
   final Strategy strategy = Strategy.P2P_STAR;
   static Map<String, ConnectionInfo> endpointMap = Map();
   Set<String> discoveredEndpoints = Set();
+  bool isBackup = true;
 
   String? tempFileUri; //reference to the file currently being transferred
   Map<int, String> map = Map(); //store filename mapped to corresponding payloadId
@@ -243,9 +244,9 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                         showSnackbar("FAILED to transfer file");
                       } else if (payloadTransferUpdate.status ==
                           PayloadStatus.SUCCESS) {
-                        showSnackbar(
-                            // "$endid success, total bytes = ${payloadTransferUpdate.totalBytes}");
-                          "File transfer success.");
+                        // showSnackbar(
+                        //     // "$endid success, total bytes = ${payloadTransferUpdate.totalBytes}");
+                        //   "File transfer success.");
 
                         if (map.containsKey(payloadTransferUpdate.id)) {
                           //rename the file now
@@ -303,15 +304,24 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                     children: [
                       ElevatedButton(
                         onPressed: () async {
+                          setState(() {
+                            isBackup = true;
+                          });
                           await sendAllFiles();
-                          print("--- --- --- Test 1");
-                          sendPayload("Start sync");
+                          isBackup ? sendPayload("Start Backup"): sendPayload("Start Sync");
                         } ,
                         child: Text("Start Backup"),
                       ),
                       SizedBox(width: 8), // Add some spacing between buttons
                       ElevatedButton(
-                        onPressed: () => sync(),
+                        onPressed: () async {
+                          setState(() {
+                            isBackup = false;
+                          });
+                          // sync();
+                          await sendAllFiles();
+                          isBackup ? sendPayload("Start Backup"): sendPayload("Start Sync");
+                        } ,
                         child: Text("Sync"),
                       ),
                     ],
