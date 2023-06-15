@@ -331,11 +331,14 @@ class _ConnectionDiscoveringScreenState
                 final ConnectionInfo info = endpointMap[id]!;
 
                 return ListTile(
-                  title: Text(info.endpointName),
-                  subtitle: Text("ID: $id"),
-                  trailing: Row(
+                  // title: Text(info.endpointName),
+                  // subtitle: Text("ID: $id"),
+                  leading: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      SizedBox(
+                        height: 15,
+                      ),
                       ElevatedButton(
                         onPressed: () async {
                           setState(() {
@@ -348,7 +351,9 @@ class _ConnectionDiscoveringScreenState
                         },
                         child: Text("Start Backup"),
                       ),
-                      SizedBox(width: 8), // Add some spacing between buttons
+                      SizedBox(
+                        height: 15,
+                      ), // Add some spacing between buttons
                       ElevatedButton(
                         onPressed: () async {
                           setState(() {
@@ -378,6 +383,9 @@ class _ConnectionDiscoveringScreenState
               ),
             ),
           ),
+          SizedBox(
+            height: 15,
+          )
         ],
       ),
     );
