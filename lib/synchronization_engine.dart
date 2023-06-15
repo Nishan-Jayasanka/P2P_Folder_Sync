@@ -5,7 +5,6 @@ import 'connection_advertising_screen.dart';
 import 'package:path/path.dart' as path;
 
 class SynchronizationEngine {
-
   Directory? _directory;
 
   Future<void> startMonitoring(String directoryPath) async {
@@ -21,7 +20,7 @@ class SynchronizationEngine {
         sendFile('$directoryPath/$fileName');
       }
 
-      if (event.type == FileSystemEvent.delete){
+      if (event.type == FileSystemEvent.delete) {
         final fileName = path.basename(event.path);
         print('---- ---- $fileName is removed.');
         sendPayload('Removed-$directoryPath/$fileName');
@@ -29,24 +28,29 @@ class SynchronizationEngine {
     });
   }
 
-  void sendFile(String filePath){
-    if (ConnectionAdvertisingScreen().getEndPointMap().isNotEmpty){
+  void sendFile(String filePath) {
+    if (ConnectionAdvertisingScreen().getEndPointMap().isNotEmpty) {
       ConnectionAdvertisingScreen().sendFile(filePath);
-    }else{
-      ConnectionDiscoveringScreen(directory_name: 'null', files: [],).sendFile(filePath);
+    } else {
+      ConnectionDiscoveringScreen(
+        directory_name: 'null',
+        files: [],
+      ).sendFile(filePath);
     }
   }
 
-  void sendPayload(String payload){
-    if (ConnectionAdvertisingScreen().getEndPointMap().isNotEmpty){
+  void sendPayload(String payload) {
+    if (ConnectionAdvertisingScreen().getEndPointMap().isNotEmpty) {
       ConnectionAdvertisingScreen().sendPayload(payload);
-    }else{
-      ConnectionDiscoveringScreen(directory_name: 'null', files: [],).sendPayload(payload);
+    } else {
+      ConnectionDiscoveringScreen(
+        directory_name: 'null',
+        files: [],
+      ).sendPayload(payload);
     }
   }
 
   Future<void> stopMonitoring() async {
     _directory?.parent?.delete();
   }
-
 }

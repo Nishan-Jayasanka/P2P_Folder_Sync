@@ -9,7 +9,8 @@ import 'animated_connection_icon.dart';
 import 'file_list_screen.dart';
 
 class ConnectionAdvertisingScreen extends StatefulWidget {
-  final _ConnectionAdvertisingScreenState state = _ConnectionAdvertisingScreenState();
+  final _ConnectionAdvertisingScreenState state =
+      _ConnectionAdvertisingScreenState();
 
   @override
   _ConnectionAdvertisingScreenState createState() => state;
@@ -22,12 +23,13 @@ class ConnectionAdvertisingScreen extends StatefulWidget {
     state.sendFile(filePath);
   }
 
-  Map<String, ConnectionInfo> getEndPointMap(){
+  Map<String, ConnectionInfo> getEndPointMap() {
     return state.getEndPointMap();
   }
 }
 
-class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScreen> {
+class _ConnectionAdvertisingScreenState
+    extends State<ConnectionAdvertisingScreen> {
   final String userName = Random().nextInt(10000).toString();
   final Strategy strategy = Strategy.P2P_STAR;
   static Map<String, ConnectionInfo> endpointMap = Map();
@@ -35,7 +37,8 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
 
   String? tempFileUri; //reference to the file currently being transferred
   static String? tempDirectoryName;
-  static Map<int, String> map = Map(); //store filename mapped to corresponding payloadId
+  static Map<int, String> map =
+      Map(); //store filename mapped to corresponding payloadId
 
   @override
   void initState() {
@@ -85,6 +88,8 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
   void showSnackbar(dynamic a) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(a.toString()),
+      backgroundColor: Colors.orange[700],
+      dismissDirection: DismissDirection.horizontal,
     ));
   }
 
@@ -96,11 +101,21 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text("id: " + id),
-              Text("Token: " + info.authenticationToken),
-              Text("Name" + info.endpointName),
-              Text("Incoming: " + info.isIncomingConnection.toString()),
+              Text("Id   : $id"),
+              SizedBox(
+                height: 10,
+              ),
+              // Text("Token: ${info.authenticationToken}"),
+              Text("Name : ${info.endpointName}"),
+              SizedBox(
+                height: 10,
+              ),
+              // Text("Incoming: ${info.isIncomingConnection}"),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 168, 5, 35),
+                  foregroundColor: Colors.white,
+                ),
                 child: Text("Accept Connection"),
                 onPressed: () {
                   Navigator.pop(context);
@@ -113,33 +128,38 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
                       if (payload.type == PayloadType.BYTES) {
                         String str = String.fromCharCodes(payload.bytes!);
 
-                        if (str.contains('Directory Name -')){
-                          String parentDirectoryPath = '/storage/emulated/0/SyncBuddy';
+                        if (str.contains('Directory Name -')) {
+                          String parentDirectoryPath =
+                              '/storage/emulated/0/SyncBuddy';
                           String newDirectoryName = str.split('-').last;
                           tempDirectoryName = newDirectoryName;
-                          Directory newDirectory = Directory('$parentDirectoryPath/$newDirectoryName');
+                          Directory newDirectory = Directory(
+                              '$parentDirectoryPath/$newDirectoryName');
                           if (!(await newDirectory.exists())) {
                             newDirectory.create(recursive: true);
-                            print('--- --- New directory created: ${newDirectory.path}');
+                            print(
+                                '--- --- New directory created: ${newDirectory.path}');
                           } else {
-                            print('--- --- Directory already exists: ${newDirectory.path}');
+                            print(
+                                '--- --- Directory already exists: ${newDirectory.path}');
                           }
-
                         }
 
-                        if (str.contains("Start sync")){
+                        if (str.contains("Start sync")) {
                           setState(() {
                             isBackup = false;
                           });
-                          SynchronizationEngine().startMonitoring('/storage/emulated/0/SyncBuddy/$tempDirectoryName');
-                        }else{
+                          SynchronizationEngine().startMonitoring(
+                              '/storage/emulated/0/SyncBuddy/$tempDirectoryName');
+                        } else {
                           setState(() {
                             isBackup = true;
                           });
-                          SynchronizationEngine().startMonitoring('/storage/emulated/0/SyncBuddy/$tempDirectoryName');
+                          SynchronizationEngine().startMonitoring(
+                              '/storage/emulated/0/SyncBuddy/$tempDirectoryName');
                         }
 
-                        if (str.contains('Removed-') && !isBackup){
+                        if (str.contains('Removed-') && !isBackup) {
                           String filePath = str.split('-').last;
                           final file = File(filePath);
                           await file.delete();
@@ -170,13 +190,16 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
                       }
                     },
                     onPayloadTransferUpdate: (endid, payloadTransferUpdate) {
-                      if (payloadTransferUpdate.status == PayloadStatus.IN_PROGRESS) {
+                      if (payloadTransferUpdate.status ==
+                          PayloadStatus.IN_PROGRESS) {
                         print("--- --- --- Payload transfer in progress.");
                         print(payloadTransferUpdate.bytesTransferred);
-                      } else if (payloadTransferUpdate.status == PayloadStatus.FAILURE) {
+                      } else if (payloadTransferUpdate.status ==
+                          PayloadStatus.FAILURE) {
                         print("--- --- --- Payload transfer failed.");
                         showSnackbar("FAILED to transfer file");
-                      } else if (payloadTransferUpdate.status == PayloadStatus.SUCCESS) {
+                      } else if (payloadTransferUpdate.status ==
+                          PayloadStatus.SUCCESS) {
                         print("--- --- --- Payload transfer successful.");
                         // showSnackbar("File transfer successful");
 
@@ -223,7 +246,7 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
   // }
 
   void sendPayload(String payload) async {
-    for (MapEntry<String, ConnectionInfo> m in endpointMap.entries){
+    for (MapEntry<String, ConnectionInfo> m in endpointMap.entries) {
       Nearby().sendBytesPayload(m.key, Uint8List.fromList(payload.codeUnits));
       print("--- --- ---Payload sent successfully. payload: $payload");
     }
@@ -233,18 +256,22 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
     print("--- --- --- --- Send File: $filePath");
     for (MapEntry<String, ConnectionInfo> m in endpointMap.entries) {
       int payloadId = await Nearby().sendFilePayload(m.key, filePath);
-      Nearby().sendBytesPayload(m.key, Uint8List.fromList("$payloadId:${filePath.split('/').last}".codeUnits));
+      Nearby().sendBytesPayload(
+          m.key,
+          Uint8List.fromList(
+              "$payloadId:${filePath.split('/').last}".codeUnits));
     }
   }
 
-
   Future<bool> moveFile(String uri, String fileName) async {
     String parentDir = '/storage/emulated/0/SyncBuddy';
-    final b = await Nearby().copyFileAndDeleteOriginal(uri, '$parentDir/$tempDirectoryName/$fileName');
+    final b = await Nearby().copyFileAndDeleteOriginal(
+        uri, '$parentDir/$tempDirectoryName/$fileName');
 
     // showSnackbar("Moved file:" + b.toString());
 
-    Directory dir = Directory('/storage/emulated/0/SyncBuddy/$tempDirectoryName');
+    Directory dir =
+        Directory('/storage/emulated/0/SyncBuddy/$tempDirectoryName');
     final files = (await dir.list(recursive: true).toList())
         .map((f) => f.path)
         .toList()
@@ -258,37 +285,54 @@ class _ConnectionAdvertisingScreenState extends State<ConnectionAdvertisingScree
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Device Connecting"),
+        title: Text(
+          "Connect Device",
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: Column(
         children: [
           SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.devices,
-                size: 30,
-              ),
-              SizedBox(width: 10),
-              Text(
-                "User Name: $userName",
-                style: TextStyle(fontSize: 20),
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.only(top: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.phonelink_ring,
+                  color: Color.fromARGB(255, 14, 2, 6),
+                  size: 30,
+                ),
+                SizedBox(width: 10),
+                Text(
+                  "User Name: $userName",
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Color.fromARGB(255, 14, 2, 6),
+                  ),
+                ),
+              ],
+            ),
           ),
           SizedBox(height: 20),
           Expanded(
             child: Center(
-              child: AnimatedConnectionIcon(), // Replace with the animated broadcasting widget
+              child:
+                  AnimatedConnectionIcon(), // Replace with the animated broadcasting widget
             ),
           ),
-          SizedBox(height: 20),
-          Text("Number of connected devices: ${endpointMap.length}"),
-          SizedBox(height: 20),
+          // SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.all(35),
+            child: Text(
+              "Number of connected devices: ${endpointMap.length}",
+              style:
+                  TextStyle(fontSize: 18, color: Color.fromARGB(255, 1, 5, 8)),
+            ),
+          ),
+          // SizedBox(height: 20),
         ],
       ),
     );
   }
 }
-

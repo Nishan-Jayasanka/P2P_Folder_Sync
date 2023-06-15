@@ -47,7 +47,6 @@ class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
         selected_folder = Folder(folder.path.split('/').last, folder);
       });
     }
-
   }
 
   Future<void> moveFolder(String sourcePath, String destinationPath) async {
@@ -91,7 +90,10 @@ class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Selected Files'),
+        title: Text(
+          'Selected Files',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: ListView.builder(
         itemCount: files.length,
@@ -122,7 +124,8 @@ class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
         padding: EdgeInsets.all(16.0),
         child: ElevatedButton(
           onPressed: () async {
-            await moveFolder(selected_folder.directory.path,'/storage/emulated/0/SyncBuddy/${selected_folder.folderName}');
+            await moveFolder(selected_folder.directory.path,
+                '/storage/emulated/0/SyncBuddy/${selected_folder.folderName}');
             navigateToConnectionDiscoveringScreen();
           },
           child: Text('Backup'),
@@ -131,4 +134,3 @@ class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
     );
   }
 }
-

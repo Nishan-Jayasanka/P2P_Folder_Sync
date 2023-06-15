@@ -8,7 +8,8 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 class ConnectionDiscoveringScreen extends StatefulWidget {
-  final _ConnectionDiscoveringScreenState state = _ConnectionDiscoveringScreenState();
+  final _ConnectionDiscoveringScreenState state =
+      _ConnectionDiscoveringScreenState();
   String directory_name;
   List<FileSystemEntity> files;
 
@@ -27,10 +28,10 @@ class ConnectionDiscoveringScreen extends StatefulWidget {
   void sendFile(String filePath) {
     state.sendFile(filePath);
   }
-
 }
 
-class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScreen> {
+class _ConnectionDiscoveringScreenState
+    extends State<ConnectionDiscoveringScreen> {
   final String userName = Random().nextInt(10000).toString();
   final Strategy strategy = Strategy.P2P_STAR;
   static Map<String, ConnectionInfo> endpointMap = Map();
@@ -38,7 +39,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
   bool isBackup = true;
 
   String? tempFileUri; //reference to the file currently being transferred
-  Map<int, String> map = Map(); //store filename mapped to corresponding payloadId
+  Map<int, String> map = {}; //store filename mapped to corresponding payloadId
 
   @override
   void initState() {
@@ -58,7 +59,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
         userName,
         strategy,
         onEndpointFound: (id, name, serviceId) {
-          if (!discoveredEndpoints.contains(id)){
+          if (!discoveredEndpoints.contains(id)) {
             discoveredEndpoints.add(id);
             // show dialog automatically to request connection
             showDialog(
@@ -68,11 +69,22 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      Text("id: " + id),
-                      Text("Name: " + name),
-                      Text("ServiceId: " + serviceId),
+                      Text("Id: $id"),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Text("Name: $name"),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      // Text("ServiceId: $serviceId"),
+                      SizedBox(
+                        height: 10,
+                      ),
                       ElevatedButton(
-                        child: Text("Request Connection"),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Color.fromARGB(255, 154, 3, 31),
+                            foregroundColor: Colors.white),
                         onPressed: () {
                           Navigator.pop(context);
                           Nearby().requestConnection(
@@ -88,12 +100,12 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                               setState(() {
                                 endpointMap.remove(id);
                               });
-                              showSnackbar(
-                              "Device Disconnected");
-                                  // "Disconnected from: ${endpointMap[id]!.endpointName}, id $id");
+                              showSnackbar("Device Disconnected");
+                              // "Disconnected from: ${endpointMap[id]!.endpointName}, id $id");
                             },
                           );
                         },
+                        child: Text("Request Connection"),
                       ),
                     ],
                   ),
@@ -103,9 +115,8 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
           }
         },
         onEndpointLost: (id) {
-          showSnackbar(
-              "Device Disconnected");
-              // "Lost discovered Endpoint: ${endpointMap[id]!.endpointName}, id $id");
+          showSnackbar("Device Disconnected");
+          // "Lost discovered Endpoint: ${endpointMap[id]!.endpointName}, id $id");
         },
       );
       // showSnackbar("DISCOVERING: " + a.toString());
@@ -116,18 +127,19 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
     }
   }
 
-
   Future<void> stopDiscovery() async {
     await Nearby().stopDiscovery();
   }
 
   Future<bool> moveFile(String uri, String fileName) async {
     String parentDir = '/storage/emulated/0/SyncBuddy';
-    final b = await Nearby().copyFileAndDeleteOriginal(uri, '$parentDir/${widget.directory_name}/$fileName');
+    final b = await Nearby().copyFileAndDeleteOriginal(
+        uri, '$parentDir/${widget.directory_name}/$fileName');
 
     // showSnackbar("Moved file:" + b.toString());
 
-    Directory dir = Directory('/storage/emulated/0/SyncBuddy/${widget.directory_name}');
+    Directory dir =
+        Directory('/storage/emulated/0/SyncBuddy/${widget.directory_name}');
     final files = (await dir.list(recursive: true).toList())
         .map((f) => f.path)
         .toList()
@@ -144,7 +156,10 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
       // Sending files using sendFilePayload
       for (MapEntry<String, ConnectionInfo> m in endpointMap.entries) {
         int payloadId = await Nearby().sendFilePayload(m.key, file.path);
-        Nearby().sendBytesPayload(m.key, Uint8List.fromList("$payloadId:${file.path.split('/').last}".codeUnits));
+        Nearby().sendBytesPayload(
+            m.key,
+            Uint8List.fromList(
+                "$payloadId:${file.path.split('/').last}".codeUnits));
       }
     }
     showSnackbar("Backup Success.");
@@ -156,28 +171,32 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
     // Sending file using sendFilePayload
     for (MapEntry<String, ConnectionInfo> m in endpointMap.entries) {
       int payloadId = await Nearby().sendFilePayload(m.key, filePath);
-      Nearby().sendBytesPayload(m.key, Uint8List.fromList("$payloadId:${filePath.split('/').last}".codeUnits));
+      Nearby().sendBytesPayload(
+          m.key,
+          Uint8List.fromList(
+              "$payloadId:${filePath.split('/').last}".codeUnits));
     }
   }
 
   void sendPayload(String payload) async {
-    for (MapEntry<String, ConnectionInfo> m in endpointMap.entries){
+    for (MapEntry<String, ConnectionInfo> m in endpointMap.entries) {
       Nearby().sendBytesPayload(m.key, Uint8List.fromList(payload.codeUnits));
     }
   }
 
-  void sync() async{
-    for (var file in widget.files){
-      print("--- --- ---" + file.path.split('/').last);
+  void sync() async {
+    for (var file in widget.files) {
+      print("--- --- ---${file.path.split('/').last}");
       String payload = file.path.split('/').last;
       sendPayload(payload);
     }
   }
 
-
   void showSnackbar(dynamic a) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(a.toString()),
+      backgroundColor: Colors.orange[700],
+      dismissDirection: DismissDirection.horizontal,
     ));
   }
 
@@ -189,12 +208,21 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text("id: " + id),
-              Text("Token: " + info.authenticationToken),
-              Text("Name" + info.endpointName),
-              Text("Incoming: " + info.isIncomingConnection.toString()),
+              Text("Id: $id"),
+              SizedBox(
+                height: 10,
+              ),
+              // Text("Token: ${info.authenticationToken}"),
+              Text("Name: ${info.endpointName}"),
+              SizedBox(
+                height: 10,
+              ),
+              // Text("Incoming: ${info.isIncomingConnection}"),
               ElevatedButton(
-                child: Text("Accept Connection"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 168, 5, 35),
+                  foregroundColor: Colors.white,
+                ),
                 onPressed: () {
                   Navigator.pop(context);
                   setState(() {
@@ -206,7 +234,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                       if (payload.type == PayloadType.BYTES) {
                         String str = String.fromCharCodes(payload.bytes!);
                         // showSnackbar(endid + ": " + str);
-                        if (str.contains('Removed-')){
+                        if (str.contains('Removed-')) {
                           String filePath = str.split('-').last;
                           final file = File(filePath);
                           await file.delete();
@@ -261,6 +289,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                   );
                   sendPayload("Directory Name -${widget.directory_name}");
                 },
+                child: Text("Accept Connection"),
               ),
               ElevatedButton(
                 child: Text("Reject Connection"),
@@ -285,7 +314,7 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Connection Discover"),
+        title: Text("Connection Discovery"),
       ),
       body: Column(
         children: [
@@ -308,8 +337,10 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                             isBackup = true;
                           });
                           await sendAllFiles();
-                          isBackup ? sendPayload("Start Backup"): sendPayload("Start Sync");
-                        } ,
+                          isBackup
+                              ? sendPayload("Start Backup")
+                              : sendPayload("Start Sync");
+                        },
                         child: Text("Start Backup"),
                       ),
                       SizedBox(width: 8), // Add some spacing between buttons
@@ -320,8 +351,10 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
                           });
                           // sync();
                           await sendAllFiles();
-                          isBackup ? sendPayload("Start Backup"): sendPayload("Start Sync");
-                        } ,
+                          isBackup
+                              ? sendPayload("Start Backup")
+                              : sendPayload("Start Sync");
+                        },
                         child: Text("Sync"),
                       ),
                     ],
@@ -330,10 +363,18 @@ class _ConnectionDiscoveringScreenState extends State<ConnectionDiscoveringScree
               },
             ),
           ),
-          Text("Number of connected devices: ${endpointMap.length}"),
+          Padding(
+            padding: const EdgeInsets.all(25),
+            child: Text(
+              "Number of connected devices: ${endpointMap.length}",
+              style: TextStyle(
+                fontSize: 18,
+                color: const Color.fromARGB(255, 14, 53, 85),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
-
 }

@@ -1,8 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:nearby_connections/nearby_connections.dart';
-import 'dart:math';
 
 class AnimatedConnectionIcon extends StatefulWidget {
   @override
@@ -37,7 +33,8 @@ class _AnimatedConnectionIconState extends State<AnimatedConnectionIcon>
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    final iconSize = screenSize.width * 0.5; // Adjust the size as per your preference
+    final iconSize =
+        screenSize.width * 0.5; // Adjust the size as per your preference
 
     return Center(
       child: RotationTransition(
@@ -45,10 +42,9 @@ class _AnimatedConnectionIconState extends State<AnimatedConnectionIcon>
         child: Icon(
           Icons.wifi_tethering,
           size: iconSize,
-          color: Colors.blue,
+          color: Color.fromARGB(255, 15, 70, 116),
         ),
       ),
     );
   }
 }
-

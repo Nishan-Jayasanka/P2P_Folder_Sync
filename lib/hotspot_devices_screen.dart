@@ -13,10 +13,10 @@ class Body extends StatefulWidget {
 class _MyBodyState extends State<Body> {
   final String userName = Random().nextInt(10000).toString();
   final Strategy strategy = Strategy.P2P_STAR;
-  Map<String, ConnectionInfo> endpointMap = Map();
+  Map<String, ConnectionInfo> endpointMap = {};
 
   String? tempFileUri; //reference to the file currently being transferred
-  Map<int, String> map = Map(); //store filename mapped to corresponding payloadId
+  Map<int, String> map = {}; //store filename mapped to corresponding payloadId
 
   @override
   Widget build(BuildContext context) {
@@ -28,10 +28,14 @@ class _MyBodyState extends State<Body> {
           child: ListView(
             children: <Widget>[
               Divider(),
-              Text("User Name: " + userName),
+              Text("User Name: $userName"),
               Wrap(
                 children: <Widget>[
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromARGB(255, 168, 5, 35),
+                      foregroundColor: Colors.white,
+                    ),
                     child: Text("Start Advertising"),
                     onPressed: () async {
                       try {
@@ -50,13 +54,17 @@ class _MyBodyState extends State<Body> {
                             });
                           },
                         );
-                        showSnackbar("ADVERTISING: " + a.toString());
+                        showSnackbar("ADVERTISING: $a");
                       } catch (exception) {
                         showSnackbar(exception);
                       }
                     },
                   ),
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromARGB(255, 168, 5, 35),
+                      foregroundColor: Colors.white,
+                    ),
                     child: Text("Stop Advertising"),
                     onPressed: () async {
                       await Nearby().stopAdvertising();
@@ -67,6 +75,10 @@ class _MyBodyState extends State<Body> {
               Wrap(
                 children: <Widget>[
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromARGB(255, 168, 5, 35),
+                      foregroundColor: Colors.white,
+                    ),
                     child: Text("Start Discovery"),
                     onPressed: () async {
                       try {
@@ -82,10 +94,15 @@ class _MyBodyState extends State<Body> {
                                   content: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: <Widget>[
-                                      Text("id: " + id),
-                                      Text("Name: " + name),
-                                      Text("ServiceId: " + serviceId),
+                                      Text("id: $id"),
+                                      Text("Name: $name"),
+                                      // Text("ServiceId: $serviceId"),
                                       ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              Color.fromARGB(255, 168, 5, 35),
+                                          foregroundColor: Colors.white,
+                                        ),
                                         child: Text("Request Connection"),
                                         onPressed: () {
                                           Navigator.pop(context);
@@ -119,13 +136,17 @@ class _MyBodyState extends State<Body> {
                                 "Lost discovered Endpoint: ${endpointMap[id]!.endpointName}, id $id");
                           },
                         );
-                        showSnackbar("DISCOVERING: " + a.toString());
+                        showSnackbar("DISCOVERING: $a");
                       } catch (e) {
                         showSnackbar(e);
                       }
                     },
                   ),
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromARGB(255, 168, 5, 35),
+                      foregroundColor: Colors.white,
+                    ),
                     child: Text("Stop Discovery"),
                     onPressed: () async {
                       await Nearby().stopDiscovery();
@@ -135,6 +156,10 @@ class _MyBodyState extends State<Body> {
               ),
               Text("Number of connected devices: ${endpointMap.length}"),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 168, 5, 35),
+                  foregroundColor: Colors.white,
+                ),
                 child: Text("Stop All Endpoints"),
                 onPressed: () async {
                   await Nearby().stopAllEndpoints();
@@ -148,37 +173,52 @@ class _MyBodyState extends State<Body> {
                 "Sending Data",
               ),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 168, 5, 35),
+                  foregroundColor: Colors.white,
+                ),
                 child: Text("Send Random Bytes Payload"),
                 onPressed: () async {
                   endpointMap.forEach((key, value) {
                     String a = Random().nextInt(100).toString();
 
-                    showSnackbar("Sending $a to ${value.endpointName}, id: $key");
-                    Nearby().sendBytesPayload(key, Uint8List.fromList(a.codeUnits));
+                    showSnackbar(
+                        "Sending $a to ${value.endpointName}, id: $key");
+                    Nearby()
+                        .sendBytesPayload(key, Uint8List.fromList(a.codeUnits));
                   });
                 },
               ),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 168, 5, 35),
+                  foregroundColor: Colors.white,
+                ),
                 child: Text("Send File Payload"),
                 onPressed: () async {
                   PickedFile? file =
-                  await ImagePicker().getImage(source: ImageSource.gallery);
+                      await ImagePicker().getImage(source: ImageSource.gallery);
 
                   if (file == null) return;
 
                   for (MapEntry<String, ConnectionInfo> m
-                  in endpointMap.entries) {
+                      in endpointMap.entries) {
                     int payloadId =
-                    await Nearby().sendFilePayload(m.key, file.path);
+                        await Nearby().sendFilePayload(m.key, file.path);
                     showSnackbar("Sending file to ${m.key}");
                     Nearby().sendBytesPayload(
                         m.key,
                         Uint8List.fromList(
-                            "$payloadId:${file.path.split('/').last}".codeUnits));
+                            "$payloadId:${file.path.split('/').last}"
+                                .codeUnits));
                   }
                 },
               ),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 168, 5, 35),
+                  foregroundColor: Colors.white,
+                ),
                 child: Text("Print file names."),
                 onPressed: () async {
                   final dir = (await getExternalStorageDirectory())!;
@@ -199,15 +239,16 @@ class _MyBodyState extends State<Body> {
   void showSnackbar(dynamic a) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(a.toString()),
+      backgroundColor: Colors.orange[700],
     ));
   }
 
   Future<bool> moveFile(String uri, String fileName) async {
     String parentDir = (await getExternalStorageDirectory())!.absolute.path;
     final b =
-    await Nearby().copyFileAndDeleteOriginal(uri, '$parentDir/$fileName');
+        await Nearby().copyFileAndDeleteOriginal(uri, '$parentDir/$fileName');
 
-    showSnackbar("Moved file:" + b.toString());
+    showSnackbar("Moved file:$b");
     return b;
   }
 
@@ -221,10 +262,10 @@ class _MyBodyState extends State<Body> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text("id: " + id),
-              Text("Token: " + info.authenticationToken),
-              Text("Name" + info.endpointName),
-              Text("Incoming: " + info.isIncomingConnection.toString()),
+              Text("id: $id"),
+              Text("Token: ${info.authenticationToken}"),
+              Text("Name${info.endpointName}"),
+              Text("Incoming: ${info.isIncomingConnection}"),
               ElevatedButton(
                 child: Text("Accept Connection"),
                 onPressed: () {
@@ -237,7 +278,7 @@ class _MyBodyState extends State<Body> {
                     onPayLoadRecieved: (endid, payload) async {
                       if (payload.type == PayloadType.BYTES) {
                         String str = String.fromCharCodes(payload.bytes!);
-                        showSnackbar(endid + ": " + str);
+                        showSnackbar("$endid: $str");
 
                         if (str.contains(':')) {
                           // used for file payload as file payload is mapped as
@@ -257,7 +298,7 @@ class _MyBodyState extends State<Body> {
                           }
                         }
                       } else if (payload.type == PayloadType.FILE) {
-                        showSnackbar(endid + ": File transfer started");
+                        showSnackbar("$endid: File transfer started");
                         tempFileUri = payload.uri;
                       }
                     },
@@ -268,7 +309,7 @@ class _MyBodyState extends State<Body> {
                       } else if (payloadTransferUpdate.status ==
                           PayloadStatus.FAILURE) {
                         print("failed");
-                        showSnackbar(endid + ": FAILED to transfer file");
+                        showSnackbar("$endid: FAILED to transfer file");
                       } else if (payloadTransferUpdate.status ==
                           PayloadStatus.SUCCESS) {
                         showSnackbar(
