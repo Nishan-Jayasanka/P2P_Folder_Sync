@@ -132,7 +132,7 @@ class _FolderSelectionScreenState extends State<FolderSelectionScreen> {
                 '/storage/emulated/0/SyncBuddy/${selected_folder.folderName}');
             navigateToConnectionDiscoveringScreen();
           },
-          child: Text('Backup'),
+          child: Text('Continue'),
         ),
       ),
     );

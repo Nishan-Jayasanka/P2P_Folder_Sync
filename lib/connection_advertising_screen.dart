@@ -58,7 +58,7 @@ class _ConnectionAdvertisingScreenState
 
   Future<void> startAdvertising() async {
     try {
-      bool a = await Nearby().startAdvertising(
+      bool start = await Nearby().startAdvertising(
         userName,
         strategy,
         onConnectionInitiated: onConnectionInit,
